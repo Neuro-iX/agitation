@@ -13,8 +13,8 @@ exclude = [
 
 [project]
 name = "agitation"
-version = "0.0.6"
-description = " Deep Learning based tool to quantify subject motion in T1w brain MRI "
+version = "0.0.1"
+description = "Deep Learning based tool to quantify subject motion in T1w brain MRI "
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE*"]
