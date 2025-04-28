@@ -37,6 +37,13 @@ dependencies = [
     "pandas==2.2.3",
 ]
 
+[project.urls]
+Repository = "https://github.com/chbricout/agitation"
+
+[project.scripts]
+agitation = "agitation:cli"
+
+
 [tool.pytest.ini_options]
 pythonpath = "."
 addopts = [
