@@ -13,8 +13,8 @@ exclude = [
 
 [project]
 name = "agitation"
-version = "0.0.1"
-description = "Deep Learning based tool to quantify subject motion in T1w brain MRI "
+version = "0.0.2"
+description = "Deep Learning based tool to quantify subject motion in T1w brain MRI"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE*"]
@@ -55,7 +55,7 @@ omit = [".conda/*"]
 
 [tool.pylint.main]
 init-hook = "import sys; sys.path.append('.')"
-ignore-paths = [".conda"]
+ignore-paths = [".conda","tests/data"]
 
 [tool.ruff]
 exclude = [
@@ -85,7 +85,8 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    ".conda"
+    ".conda",
+    "data"
 ]
 
 [tool.ruff.lint]

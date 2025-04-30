@@ -1,0 +1,7 @@
+{
+    "bids_dir": "[[NIPOPPY_DPATH_BIDS]]",
+    "output_dir": "[[NIPOPPY_DPATH_PIPELINE_OUTPUT]]",
+    "subject_id": "[[NIPOPPY_BIDS_PARTICIPANT_ID]]",
+    "session_id": "[[NIPOPPY_BIDS_SESSION_ID]]",
+    "gpu":true 
+}

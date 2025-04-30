@@ -2,7 +2,6 @@
 
 import glob
 import os
-import re
 from typing import Callable
 
 import click
@@ -15,6 +14,12 @@ from torch.utils.data import DataLoader
 from agitation import config
 from agitation.click_utils import usage_fail
 from agitation.data_manager import check
+from agitation.dataset import (
+    bids_to_list,
+    clinica_to_list,
+    detect_anat,
+    detect_t1_linear,
+)
 from agitation.processing import LoadVolume, SoftLabelToPred
 
 
@@ -51,151 +56,7 @@ def estimate_motion_dl(dl: DataLoader, cuda: int | None = None) -> pd.DataFrame:
     return pd.concat(motion_res)
 
 
-def get_sub(path: str) -> str | None:
-    """Find subject identifier in a path.
-
-    Args:
-        path (str): path to analyze
-
-    Returns:
-        str | None: Identifier (sub-<label>)
-    """
-    match = re.match(r".*(sub-[\dA-Za-z]*).*", path)
-    if match:
-        return match.groups()[0]
-    return None
-
-
-def get_ses(path: str) -> str | None:
-    """Find session identifier in a path.
-
-    Args:
-        path (str): path to analyze
-
-    Returns:
-        str | None: Identifier (ses-<label>)
-    """
-    match = re.match(r".*(ses-[\dA-Za-z]*).*", path)
-    if match:
-        return match.groups()[0]
-    return None
-
-
-def paths_to_list(paths: list[str]) -> list[dict[str, str | None]]:
-    """Create a list of dictionnary describing each path element.
-
-    Args:
-        paths (list[str]): list of paths
-
-    Returns:
-        list[dict[str,str]]: A list of dictionnary with fields :
-          `data`, `sub` and `ses` (optionnal)
-        Used to define a dataset
-    """
-    data = []
-    for volume in paths:
-        point = {"data": volume, "sub": get_sub(volume)}
-        ses = get_ses(volume)
-        if ses is not None:
-            point["ses"] = ses
-        data.append(point)
-
-    return data
-
-
-def has_session(path_to_bids: str) -> bool:
-    """Check for session existence in a bids dataset.
-
-    Args:
-        path_to_bids str: Path to bids root.
-
-    Returns:
-        bool: True if has session layer
-    """
-    return (
-        next(glob.iglob(os.path.join(path_to_bids, "sub-*", "ses-*")), None) is not None
-    )
-
-
-def bids_to_list(path_to_bids: str) -> list[dict[str, str | None]]:
-    """Create a list of dictionnary describing each element of bids dataset.
-
-    Args:
-       path_to_bids (str): path to bids datasset
-
-    Returns:
-        list[dict[str,str]]: A list of dictionnary with fields :
-          `data`, `sub` and `ses` (optionnal)
-        Used to define a dataset
-    """
-    if has_session(path_to_bids):
-        t1_volumes = glob.glob(
-            os.path.join(path_to_bids, "sub-*", "ses-*", "anat", "*T1w.nii*")
-        )
-    else:
-        t1_volumes = glob.glob(os.path.join(path_to_bids, "sub-*", "anat", "*T1w.nii*"))
-
-    return paths_to_list(t1_volumes)
-
-
-def clinica_to_list(path_to_clinica: str) -> list[dict[str, str | None]]:
-    """Create a list of dictionnary describing each element of clinica dataset.
-
-    Args:
-       path_to_clinica (str): path to clinica datasset
-
-    Returns:
-        list[dict[str,str]]: A list of dictionnary with fields :
-          `data`, `sub` and `ses` (optionnal)
-        Used to define a dataset
-    """
-    t1_volumes = glob.glob(
-        os.path.join(
-            path_to_clinica, "subjects", "sub-*", "ses-*", "t1_linear", "*T1w.nii*"
-        )
-    )
-
-    return paths_to_list(t1_volumes)
-
-
-def detect_t1_linear(path_to_ds: str) -> bool:
-    """Detect presence of t1_linear folders.
-
-    Args:
-        path_to_ds (str): path to dataset to test
-
-    Returns:
-        bool: True if t1_linear folder found
-    """
-    return (
-        next(
-            glob.iglob(
-                os.path.join(path_to_ds, "subjects", "sub-*", "ses-*", "t1_linear")
-            ),
-            None,
-        )
-        is not None
-    )
-
-
-def detect_anat(path_to_ds) -> bool:
-    """Detect presence of anat folders.
-
-    Args:
-        path_to_ds (str): path to dataset to test
-
-    Returns:
-        bool: True if anat folder found
-    """
-    if has_session(path_to_ds):
-        return (
-            next(glob.iglob(os.path.join(path_to_ds, "sub-*", "ses-*", "anat")), None)
-            is not None
-        )
-    return next(glob.iglob(os.path.join(path_to_ds, "sub-*", "anat")), None) is not None
-
-
-@click.command("inference")
+@click.command("dataset")
 @click.option(
     "-d",
     "--dataset",
@@ -213,7 +74,7 @@ def detect_anat(path_to_ds) -> bool:
 @click.option(
     "-o", "--output", help="Path to output csv file", default="./motion_scores.csv"
 )
-def inference_cli(dataset: str, file: str, gpu: bool, cuda: int, output: str):
+def dataset_cli(dataset: str, file: str, gpu: bool, cuda: int, output: str):
     """Process a dataset using our motion quantification model."""
     if dataset is not None and file is not None:
         usage_fail("Only one data source can be provided (`dataset` OR `file`).")
@@ -227,7 +88,7 @@ def inference_cli(dataset: str, file: str, gpu: bool, cuda: int, output: str):
             convert_func = bids_to_list
             click.secho(
                 (
-                    "Warning : This datset does not seem to have been processed by Clinica's "
+                    "Warning : This dataset does not seem to have been processed by Clinica's "
                     "t1-linear pipeline"
                 ),
                 bold=True,
@@ -253,7 +114,7 @@ def inference_cli(dataset: str, file: str, gpu: bool, cuda: int, output: str):
             )
         ds = Dataset(subjects.to_dict("records"), transform=LoadVolume())
     else:
-        raise usage_fail("Missing `dataset` OR `file` arguments.")
+        usage_fail("Missing `dataset` OR `file` arguments.")
 
     check()
 
@@ -263,3 +124,79 @@ def inference_cli(dataset: str, file: str, gpu: bool, cuda: int, output: str):
     click.secho("Finished inference")
     df.to_csv(output)
     click.secho(f"Result store at : {output}", bold=True, fg="green")
+
+
+@click.command("inference")
+@click.option(
+    "--bids_dir",
+    help="Path to dataset root",
+)
+@click.option(
+    "--subject_id",
+    help="Id of subject to process (sub-<label>)",
+)
+@click.option(
+    "--session_id",
+    help="Id of session to process (ses-<label>)",
+    default=None,
+)
+@click.option("-g", "--gpu", help="Toggle GPU inference", is_flag=True)
+@click.option("--cuda", help="Specify GPU id to use, if using GPU", default=0)
+@click.option("-o", "--output_dir", help="Path to output csv dir")
+def inference_cli(
+    bids_dir: str,
+    subject_id: str,
+    session_id: str,
+    gpu: bool,
+    cuda: int,
+    output_dir: str,
+):
+    """Compute motion for a single subject, intended for usage with Boutiques and nipoppy"""
+    click.secho(f"Processing subject : {subject_id}, session : {session_id}")
+    check()
+    if gpu:
+        model = torch.jit.load(config.MODEL_PATH, map_location=f"cuda:{cuda}")
+    else:
+        model = torch.jit.load(config.MODEL_PATH)
+
+    converter = SoftLabelToPred()
+    load_volume = LoadVolume()
+
+    glob_template = os.path.join(bids_dir, subject_id)
+    output_file = subject_id
+    if session_id is not None:
+        glob_template = os.path.join(glob_template, session_id)
+        output_file = f"{output_file}_{session_id}"
+    glob_template = os.path.join(glob_template, "anat", "*_T1w.nii.gz")
+    output_file = os.path.join(output_dir, f"{output_file}_motion.csv")
+
+    t1_path = glob.glob(glob_template)
+
+    if len(t1_path) == 0:
+        usage_fail(f"No T1w volume found. Searching for : {glob_template}")
+    elif len(t1_path) > 1:
+        usage_fail(f"More than one T1w volume found. Searching for : {glob_template}")
+
+    t1_path = t1_path[0]
+    click.secho(f"T1w file found : {t1_path}", bold=True, fg="green")
+    click.secho("Starting inference")
+
+    with torch.inference_mode():
+        data = load_volume({"data": t1_path})["data"]
+        data = data.unsqueeze(0)
+        if gpu:
+            data = data.cuda(cuda)
+        motions = model(data).cpu()
+        motions = converter(motions)
+
+        df = pd.DataFrame.from_dict(
+            {
+                "subject_id": [subject_id],
+                "session_id": [session_id],
+                "path_to_t1w": [t1_path],
+                "motion": [motions[0].item()],
+            }
+        )
+        df.to_csv(output_file)
+    click.secho("Finished inference")
+    click.secho(f"Result store at : {output_file}", bold=True, fg="green")

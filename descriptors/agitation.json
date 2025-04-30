@@ -1,0 +1,75 @@
+{
+    "name": "Agitation",
+    "description": "Deep Learning based tool to quantify subject motion in T1w brain MRI ",
+    "author": "Neuro-iX, Charles Bricout",
+    "tool-version": "v0.0.2",
+    "schema-version": "0.5",
+    "command-line": "agitation inference [BIDS_DIRECTORY] [SUBJECT_ID] [SESSION_ID] [GPU_FLAG] [CUDA_ID] [OUTPUT_DIR]",
+    "container-image": {
+        "image": "chbricout/agitation:0.0.2",
+        "index": "docker://",
+        "type": "singularity",
+        "container-opts": ["--nv"]   
+    },
+    "inputs": [
+        {
+            "name": "The root BIDS directory",
+            "id": "bids_dir",
+            "type": "File",
+            "optional": false,
+            "value-key": "[BIDS_DIRECTORY]",
+            "command-line-flag": "--bids_dir"
+        },
+        {
+            "name": "The BIDS subject id (sub-<label>)",
+            "id": "subject_id",
+            "type": "String",
+            "optional": false,
+            "value-key": "[SUBJECT_ID]",
+            "command-line-flag": "--subject_id"
+        },
+        {
+            "name": "The BIDS session id (ses-<label>)",
+            "id": "session_id",
+            "type": "String",
+            "optional": false,
+            "value-key": "[SESSION_ID]",
+            "command-line-flag": "--session_id"
+        },   
+        {
+            "name": "Flag to use GPU during inference",
+            "id": "gpu",
+            "type": "Flag",
+            "optional": true,
+            "command-line-flag": "-g",
+            "value-key": "[GPU_FLAG]"
+        },
+        {
+            "name": "The CUDA identifier of the GPU to use (Defaults to 0)",
+            "id": "cuda",
+            "type": "Number",
+            "optional": true,
+            "value-key": "[CUDA_ID]",
+            "command-line-flag": "--cuda"
+        },
+        {
+            "name": "The output directory for the motion csv",
+            "id": "output_dir",
+            "type": "File",
+            "optional": false,
+            "value-key": "[OUTPUT_DIR]",
+            "command-line-flag": "--output_dir"
+        }
+    ],
+    "suggested-resources": {
+        "cpu-cores": 6,
+        "ram": 4,
+        "walltime-estimate": 5
+    },
+    "error-codes": [
+        {
+            "code": 1,
+            "description": "Crashed"
+        }
+    ]
+}

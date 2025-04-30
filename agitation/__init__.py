@@ -3,7 +3,7 @@
 import click
 
 from agitation.data_manager import manage
-from agitation.inference import inference_cli
+from agitation.inference import dataset_cli, inference_cli
 
 
 @click.group()
@@ -12,4 +12,5 @@ def cli():
 
 
 cli.add_command(manage)
+cli.add_command(dataset_cli)
 cli.add_command(inference_cli)

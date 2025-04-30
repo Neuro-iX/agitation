@@ -1,0 +1,7 @@
+{
+    "bids_dir": "tests/data/bids_sub_ses",
+    "output_dir": "./",
+    "subject_id": "sub-000103",
+    "session_id": "ses-headmotion2",
+    "gpu":true 
+}

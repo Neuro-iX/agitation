@@ -1,0 +1,17 @@
+Bootstrap: docker
+From: python:3
+
+%post
+    pip install --root-user-action=ignore agitation
+	agitation manage check 
+    agitation --help || echo "Agitation not found"
+
+%environment
+    export PATH=$PATH:/root/.local/bin
+
+%labels
+    Author Charles Bricout
+    Version v0.0.2
+
+%help
+    Container to run Agitation
