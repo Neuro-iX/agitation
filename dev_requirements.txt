@@ -17,5 +17,5 @@ pytest-cov==6.1.1
 ssort==0.14.0
 pydocstyle==6.3.0
 pre-commit==4.2.0
-boutiques==0.5.28
+boutiques==0.5.27
 nipoppy==0.3.4

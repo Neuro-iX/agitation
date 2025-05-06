@@ -9,7 +9,9 @@
         "image": "chbricout/agitation:0.0.2",
         "index": "docker://",
         "type": "singularity",
-        "container-opts": ["--nv"]   
+        "container-opts": [
+            "--nv"
+        ]
     },
     "inputs": [
         {
@@ -35,7 +37,7 @@
             "optional": false,
             "value-key": "[SESSION_ID]",
             "command-line-flag": "--session_id"
-        },   
+        },
         {
             "name": "Flag to use GPU during inference",
             "id": "gpu",
@@ -71,5 +73,6 @@
             "code": 1,
             "description": "Crashed"
         }
-    ]
+    ],
+    "doi": "10.5281/zenodo.15346974"
 }
