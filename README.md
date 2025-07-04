@@ -75,6 +75,20 @@ agitation dataset --dataset <path_to_root> -g --output <path_to_output_file>
 agitation dataset --file <path_to_csv>
 ```
 
+##### Output
+
+The CSV output file will contain the following columns:
+
+```csv
+,subject_id,session_id,path_to_t1w,motion
+```
+
+- `subject_id`: BIDS subject identifier  
+- `session_id`: BIDS session identifier  
+- `path_to_t1w`: Path to the T1-weighted (T1w) volume used for inference  
+- `motion`: Predicted motion score — an estimate of the mean head motion (in millimeters).  
+  The model predicts motion values ranging from **0 mm** (best) to **4 mm** (worst).
+
 #### Subject Level
 
 To quantify motion at the subject level, use the command:
